@@ -3,7 +3,6 @@
 $filename = '/share/Music/'.urldecode($_GET['f']);
 $start_frame = $_GET['s'];
 $end_frame = $_GET['e'];
-$mp3_bitrate = 192;
 
 if (strtolower(substr($filename, -4)) != '.wav') {
 	echo 'not wav file';
@@ -82,55 +81,21 @@ $out_head .= 'data';
 $out_head .= pack("V", $byte_size);
 
 // Wav output
-//header('Content-type: audio/x-wav');
-//echo
-
-
-// MP3 output
-
-$descriptorspec = array(
-	0 => array('pipe', 'r'),
-	1 => array('pipe', 'w'),
-	2 => array('file', '/dev/null', 'w')
-);
-
-// LAME mp3 encoder
-$process = proc_open('/opt/bin/lame -b '.$mp3_bitrate.' - -', $descriptorspec, $pipes);
-stream_set_blocking($pipes[1], 0);
-
-header( 'Expires: Thu, 01 Jan 1970 00:00:00 GMT' );
-header( 'Last-Modified: '.gmdate( 'D, d M Y H:i:s' ).' GMT' );
-// HTTP/1.1
-header( 'Cache-Control: no-store, no-cache, must-revalidate' );
-header( 'Cache-Control: post-check=0, pre-check=0', FALSE );
-// HTTP/1.0
-header( 'Pragma: no-cache' );
-
-header('Content-Type: audio/mpeg');
-//header('Content-length: ' . filesize($file));
-//header('Content-Disposition: filename="'.urldecode($_GET['f']).'"');
-header('X-Pad: avoid browser bug');
 header('Cache-Control: no-cache');
+header('Content-length: '.($byte_size + 44));
+header('Content-type: audio/x-wav');
 
-// Wav Header > lame
-$wav = $out_head;
-fwrite($pipes[0], $wav);
+echo $out_head;
 
-while (!feof($pipes[1])) {
+while (1) {
 	if (ftell($fp) < $end_byte) {
 		$wav = fread($fp, 588);
-		fwrite($pipes[0], $wav);
-	}
-	
-	$mp3 = fread($pipes[1], 1000);
-	if ($mp3 !== false && !empty($mp3)){
-		echo $mp3;
+		echo $wav;
+	} else {
+		break;
 	}
 }
 
 fclose($fp);
-fclose($pipes[0]);
-fclose($pipes[1]);
-proc_close($process);
 
 ?>
