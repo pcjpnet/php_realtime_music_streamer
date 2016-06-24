@@ -1,8 +1,18 @@
 <?php
 
 $filename = '/share/Music/'.urldecode($_GET['f']);
-$start_frame = $_GET['s'];
-$end_frame = $_GET['e'];
+
+if (!isset($_GET['s']) || $_GET['s'] === '') {
+    $start_frame = 0;
+} else {
+	$start_frame = $_GET['s'];
+}
+
+if (!isset($_GET['e']) || $_GET['e'] === '') {
+    $end_frame = -1;
+} else {
+	$end_frame = $_GET['e'];
+}
 
 if (strtolower(substr($filename, -4)) != '.wav') {
 	echo 'not wav file';
@@ -50,10 +60,7 @@ $max_frame = $data_size / $fmt_block_size / 588;
 if ($start_frame < 0) {
 	$start_frame = 0;
 }
-if ($end_frame < 0) {
-	$end_frame = 0;
-}
-if ($end_frame > $max_frame) {
+if ($end_frame <= 0 || $end_frame > $max_frame) {
 	$end_frame = $max_frame;
 }
 if ($start_frame > $end_frame) {
